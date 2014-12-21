@@ -7,18 +7,18 @@ import (
 
 type TableTestCase struct {
 	ClientID router.ClientID
-	Result   string
+	Result   router.ServerID
 	Err      *router.RoutingTableError
 }
 
 func TestMemoryGetClientMessageServer(t *testing.T) {
 	table := NewMemoryRoutingTable()
 
-	table.clientTable["CLIENT"] = clientRecord{}
+	table.clientTable["CLIENT"] = newClientRecord("server1")
 
 	tests := []TableTestCase{
 		TableTestCase{"NEWCLIENT", "", router.NewRoutingTableError(router.UnknownClient, "")},
-		TableTestCase{"CLIENT", "", nil},
+		TableTestCase{"CLIENT", "server1", nil},
 	}
 
 	// Load routing data

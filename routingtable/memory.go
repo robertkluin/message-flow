@@ -9,11 +9,20 @@ import (
 // single node message-flow system that does not require persistence.
 
 type clientRecord struct {
-	SocketServer router.ServerID
-	ServiceMap   map[router.ServiceID]router.ServerID
+	MessageServer router.ServerID
+	ServiceMap    serviceMap
 }
 
-type clientTable map[router.ClientID]clientRecord
+type serviceMap map[router.ServiceID]router.ServerID
+
+func newClientRecord(messageServer router.ServerID) *clientRecord {
+	record := new(clientRecord)
+	record.MessageServer = messageServer
+	record.ServiceMap = make(serviceMap)
+	return record
+}
+
+type clientTable map[router.ClientID]*clientRecord
 
 type MemoryRoutingTable struct {
 	clientTable clientTable
@@ -26,14 +35,14 @@ func NewMemoryRoutingTable() *MemoryRoutingTable {
 }
 
 // Which message server handles communication for client.
-func (table *MemoryRoutingTable) GetClientMessageServer(clientID router.ClientID) (string, error) {
-	_, ok := table.clientTable[clientID]
+func (table *MemoryRoutingTable) GetClientMessageServer(clientID router.ClientID) (router.ServerID, error) {
+	record, ok := table.clientTable[clientID]
 
 	if !ok {
 		return "", router.NewRoutingTableError(router.UnknownClient, "No client routing info found.")
 	}
 
-	return "", nil
+	return record.MessageServer, nil
 }
 
 // Which server for service should messages from client be routed to.
