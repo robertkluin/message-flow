@@ -14,8 +14,11 @@ type TableTestCase struct {
 func TestMemoryGetClientMessageServer(t *testing.T) {
 	table := NewMemoryRoutingTable()
 
+	table.clientTable["CLIENT"] = clientRecord{}
+
 	tests := []TableTestCase{
 		TableTestCase{"NEWCLIENT", "", router.NewRoutingTableError(router.UnknownClient, "")},
+		TableTestCase{"CLIENT", "", nil},
 	}
 
 	// Load routing data

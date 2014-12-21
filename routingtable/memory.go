@@ -13,12 +13,16 @@ type clientRecord struct {
 	ServiceMap   map[router.ServiceID]router.ServerID
 }
 
+type clientTable map[router.ClientID]clientRecord
+
 type MemoryRoutingTable struct {
-	clientTable map[router.ClientID]clientRecord
+	clientTable clientTable
 }
 
 func NewMemoryRoutingTable() *MemoryRoutingTable {
-	return new(MemoryRoutingTable)
+	table := new(MemoryRoutingTable)
+	table.clientTable = make(clientTable)
+	return table
 }
 
 // Which message server handles communication for client.
