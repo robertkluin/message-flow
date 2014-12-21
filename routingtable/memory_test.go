@@ -31,7 +31,7 @@ func TestMemoryGetClientMessageServer(t *testing.T) {
 		} else if err == nil && test.Err != nil {
 			t.Errorf("FAIL: Didn't get an expected error.\n\tTest Case: %+v\n\tActual: {result: \"%v\", err: %+v}",
 				test, result, err)
-		} else if err != nil && test.Err != nil && err.(router.RoutingTableError).Code != test.Err.Code {
+		} else if err != nil && test.Err != nil && err.(*router.RoutingTableError).Code != test.Err.Code {
 			t.Errorf("FAIL: Got the wrong error.\n\tTest Case: %+v\n\tActual: {result: \"%v\", err: %+v}",
 				test, result, err)
 		}

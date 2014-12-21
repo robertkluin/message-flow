@@ -8,7 +8,13 @@ import (
 // service registration interfaces in memory.  It is suitable for use in a
 // single node message-flow system that does not require persistence.
 
+type clientRecord struct {
+	SocketServer router.ServerID
+	ServiceMap   map[router.ServiceID]router.ServerID
+}
+
 type MemoryRoutingTable struct {
+	clientTable map[router.ClientID]clientRecord
 }
 
 func NewMemoryRoutingTable() *MemoryRoutingTable {
@@ -16,7 +22,13 @@ func NewMemoryRoutingTable() *MemoryRoutingTable {
 }
 
 // Which message server handles communication for client.
-func (table *MemoryRoutingTable) GetClientMessageServer(router.ClientID) (string, error) {
+func (table *MemoryRoutingTable) GetClientMessageServer(clientID router.ClientID) (string, error) {
+	_, ok := table.clientTable[clientID]
+
+	if !ok {
+		return "", router.NewRoutingTableError(router.UnknownClient, "No client routing info found.")
+	}
+
 	return "", nil
 }
 
