@@ -34,7 +34,7 @@ func NewMemoryRoutingTable() *MemoryRoutingTable {
 	return table
 }
 
-func (r *clientRecord) getServerServer(serviceID router.ServiceID) (router.ServerID, error) {
+func (r *clientRecord) getServiceServer(serviceID router.ServiceID) (router.ServerID, error) {
 	serverID, ok := r.ServiceMap[serviceID]
 
 	if !ok {
@@ -73,7 +73,7 @@ func (table *MemoryRoutingTable) GetClientServiceServer(clientID router.ClientID
 		return "", err
 	}
 
-	serverID, err := record.getServerServer(serviceID)
+	serverID, err := record.getServiceServer(serviceID)
 
 	if err != nil {
 		return "", err
