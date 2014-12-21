@@ -34,12 +34,32 @@ func NewMemoryRoutingTable() *MemoryRoutingTable {
 	return table
 }
 
-// Which message server handles communication for client.
-func (table *MemoryRoutingTable) GetClientMessageServer(clientID router.ClientID) (router.ServerID, error) {
+func (r *clientRecord) getServerServer(serviceID router.ServiceID) (router.ServerID, error) {
+	serverID, ok := r.ServiceMap[serviceID]
+
+	if !ok {
+		return "", router.NewRoutingTableError(router.MappingNotFoundError, "No server found for service.")
+	}
+
+	return serverID, nil
+}
+
+func (table *MemoryRoutingTable) getClientRecord(clientID router.ClientID) (*clientRecord, error) {
 	record, ok := table.clientTable[clientID]
 
 	if !ok {
-		return "", router.NewRoutingTableError(router.UnknownClient, "No client routing info found.")
+		return nil, router.NewRoutingTableError(router.UnknownClient, "No client routing info found.")
+	}
+
+	return record, nil
+}
+
+// Which message server handles communication for client.
+func (table *MemoryRoutingTable) GetClientMessageServer(clientID router.ClientID) (router.ServerID, error) {
+	record, err := table.getClientRecord(clientID)
+
+	if err != nil {
+		return "", err
 	}
 
 	return record.MessageServer, nil
@@ -47,16 +67,16 @@ func (table *MemoryRoutingTable) GetClientMessageServer(clientID router.ClientID
 
 // Which server for service should messages from client be routed to.
 func (table *MemoryRoutingTable) GetClientServiceServer(clientID router.ClientID, serviceID router.ServiceID) (router.ServerID, error) {
-	record, ok := table.clientTable[clientID]
+	record, err := table.getClientRecord(clientID)
 
-	if !ok {
-		return "", router.NewRoutingTableError(router.UnknownClient, "No client routing info found.")
+	if err != nil {
+		return "", err
 	}
 
-	serverID, ok := record.ServiceMap[serviceID]
+	serverID, err := record.getServerServer(serviceID)
 
-	if !ok {
-		return "", router.NewRoutingTableError(router.MappingNotFoundError, "No client routing info found.")
+	if err != nil {
+		return "", err
 	}
 
 	return serverID, nil
