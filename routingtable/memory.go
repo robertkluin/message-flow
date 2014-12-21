@@ -46,6 +46,18 @@ func (table *MemoryRoutingTable) GetClientMessageServer(clientID router.ClientID
 }
 
 // Which server for service should messages from client be routed to.
-func (table *MemoryRoutingTable) GetClientServiceServer(router.ClientID, router.ServiceID) (string, error) {
-	return "", nil
+func (table *MemoryRoutingTable) GetClientServiceServer(clientID router.ClientID, serviceID router.ServiceID) (router.ServerID, error) {
+	record, ok := table.clientTable[clientID]
+
+	if !ok {
+		return "", router.NewRoutingTableError(router.UnknownClient, "No client routing info found.")
+	}
+
+	serverID, ok := record.ServiceMap[serviceID]
+
+	if !ok {
+		return "", router.NewRoutingTableError(router.MappingNotFoundError, "No client routing info found.")
+	}
+
+	return serverID, nil
 }

@@ -12,6 +12,8 @@ const (
 	LookupError
 
 	UnknownClient
+
+	MappingNotFoundError
 )
 
 type RoutingTableError struct {

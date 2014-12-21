@@ -5,26 +5,69 @@ import (
 	"testing"
 )
 
-type TableTestCase struct {
-	ClientID router.ClientID
-	Result   router.ServerID
-	Err      *router.RoutingTableError
-}
-
 func TestMemoryGetClientMessageServer(t *testing.T) {
 	table := NewMemoryRoutingTable()
 
-	table.clientTable["CLIENT"] = newClientRecord("server1")
+	table.clientTable["client.2"] = newClientRecord("server.1")
 
-	tests := []TableTestCase{
-		TableTestCase{"NEWCLIENT", "", router.NewRoutingTableError(router.UnknownClient, "")},
-		TableTestCase{"CLIENT", "server1", nil},
+	type TestCase struct {
+		ClientID router.ClientID
+		Result   router.ServerID
+		Err      *router.RoutingTableError
+	}
+
+	tests := []TestCase{
+		TestCase{"client.1", "", router.NewRoutingTableError(router.UnknownClient, "")},
+		TestCase{"client.2", "server.1", nil},
 	}
 
 	// Load routing data
 
 	for _, test := range tests {
 		result, err := table.GetClientMessageServer(test.ClientID)
+		if result != test.Result {
+			t.Errorf("FAIL: Results didn't match.\n\tTest Case: %+v\n\tActual: {result: \"%v\", err: %+v}",
+				test, result, err)
+		} else if err != nil && test.Err == nil {
+			t.Errorf("FAIL: Got an unexpected error.\n\tTest Case: %+v\n\tActual: {result: \"%v\", err: %+v}",
+				test, result, err)
+		} else if err == nil && test.Err != nil {
+			t.Errorf("FAIL: Didn't get an expected error.\n\tTest Case: %+v\n\tActual: {result: \"%v\", err: %+v}",
+				test, result, err)
+		} else if err != nil && test.Err != nil && err.(*router.RoutingTableError).Code != test.Err.Code {
+			t.Errorf("FAIL: Got the wrong error.\n\tTest Case: %+v\n\tActual: {result: \"%v\", err: %+v}",
+				test, result, err)
+		}
+	}
+}
+
+func TestMemoryGetClientServiceServer(t *testing.T) {
+	table := NewMemoryRoutingTable()
+
+	table.clientTable["client.2"] = newClientRecord("server.1")
+
+	clientRecord := newClientRecord("server.2")
+	table.clientTable["client.3"] = clientRecord
+	clientRecord.ServiceMap["service.2"] = "server.1"
+
+	type TestCase struct {
+		ClientID  router.ClientID
+		ServiceID router.ServiceID
+		Result    router.ServerID
+		Err       *router.RoutingTableError
+	}
+
+	tests := []TestCase{
+		TestCase{"client.1", "service.1", "", router.NewRoutingTableError(router.UnknownClient, "")},
+		TestCase{"client.2", "service.1", "", router.NewRoutingTableError(router.MappingNotFoundError, "")},
+		TestCase{"client.3", "service.1", "", router.NewRoutingTableError(router.MappingNotFoundError, "")},
+		TestCase{"client.3", "service.2", "server.1", nil},
+	}
+
+	// Load routing data
+
+	for _, test := range tests {
+		result, err := table.GetClientServiceServer(test.ClientID, test.ServiceID)
 		if result != test.Result {
 			t.Errorf("FAIL: Results didn't match.\n\tTest Case: %+v\n\tActual: {result: \"%v\", err: %+v}",
 				test, result, err)
