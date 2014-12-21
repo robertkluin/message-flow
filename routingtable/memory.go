@@ -16,11 +16,11 @@ func NewMemoryRoutingTable() *MemoryRoutingTable {
 }
 
 // Which message server handles communication for client.
-func GetClientMessageServer(router.ClientID) (string, error) {
+func (table *MemoryRoutingTable) GetClientMessageServer(router.ClientID) (string, error) {
 	return "", nil
 }
 
 // Which server for service should messages from client be routed to.
-func GetClientServiceServer(router.ClientID, router.ServiceID) (string, error) {
+func (table *MemoryRoutingTable) GetClientServiceServer(router.ClientID, router.ServiceID) (string, error) {
 	return "", nil
 }
