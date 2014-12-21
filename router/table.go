@@ -23,6 +23,10 @@ func (err RoutingTableError) Error() string {
 	return fmt.Sprintf("%v (Routing Error Code: %d)", err.Message, err.Code)
 }
 
+func NewRoutingTableError(code RoutingTableErrorCode, message string) *RoutingTableError {
+	return &RoutingTableError{Code: code, Message: message}
+}
+
 // A RoutingTable provides all core interfaces.
 type RoutingTable interface {
 	ClientTable
