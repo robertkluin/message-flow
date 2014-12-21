@@ -10,7 +10,7 @@ import (
 
 type clientRecord struct {
 	MessageServer router.ServerID
-	ServiceMap    serviceMap
+	serviceMap    serviceMap
 }
 
 type serviceMap map[router.ServiceID]router.ServerID
@@ -18,7 +18,7 @@ type serviceMap map[router.ServiceID]router.ServerID
 func newClientRecord(messageServer router.ServerID) *clientRecord {
 	record := new(clientRecord)
 	record.MessageServer = messageServer
-	record.ServiceMap = make(serviceMap)
+	record.serviceMap = make(serviceMap)
 	return record
 }
 
@@ -35,13 +35,18 @@ func NewMemoryRoutingTable() *MemoryRoutingTable {
 }
 
 func (r *clientRecord) getServiceServer(serviceID router.ServiceID) (router.ServerID, error) {
-	serverID, ok := r.ServiceMap[serviceID]
+	serverID, ok := r.serviceMap[serviceID]
 
 	if !ok {
 		return "", router.NewRoutingTableError(router.MappingNotFoundError, "No server found for service.")
 	}
 
 	return serverID, nil
+}
+
+func (r *clientRecord) setServiceServer(serviceID router.ServiceID, serverID router.ServerID) error {
+	r.serviceMap[serviceID] = serverID
+	return nil
 }
 
 func (table *MemoryRoutingTable) getClientRecord(clientID router.ClientID) (*clientRecord, error) {

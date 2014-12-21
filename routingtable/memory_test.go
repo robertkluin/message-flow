@@ -47,8 +47,8 @@ func TestMemoryGetClientServiceServer(t *testing.T) {
 	table.clientTable["client.2"] = newClientRecord("server.1")
 
 	clientRecord := newClientRecord("server.2")
+	clientRecord.setServiceServer("service.2", "server.1")
 	table.clientTable["client.3"] = clientRecord
-	clientRecord.ServiceMap["service.2"] = "server.1"
 
 	type TestCase struct {
 		ClientID  router.ClientID
