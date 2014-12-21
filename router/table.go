@@ -1,5 +1,28 @@
 package router
 
+import (
+	"fmt"
+)
+
+type RoutingTableErrorCode int
+
+const (
+	_                                  = iota
+	ServiceError RoutingTableErrorCode = iota
+	LookupError
+
+	UnknownClient
+)
+
+type RoutingTableError struct {
+	Code    RoutingTableErrorCode
+	Message string
+}
+
+func (err RoutingTableError) Error() string {
+	return fmt.Sprintf("%v (Routing Error Code: %d)", err.Message, err.Code)
+}
+
 // A RoutingTable provides all core interfaces.
 type RoutingTable interface {
 	ClientTable
