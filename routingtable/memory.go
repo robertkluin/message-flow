@@ -147,7 +147,7 @@ func (table *MemoryRoutingTable) getOrCreateClientRecord(clientID router.ClientI
 	record, ok := table.clientTable[clientID]
 
 	if !ok {
-		record = newClientRecord("")
+		record = newClientRecord()
 		table.clientTable[clientID] = record
 	}
 
@@ -196,9 +196,9 @@ type clientRecord struct {
 
 type serviceMap map[router.ServiceID]router.ServerID
 
-func newClientRecord(messageServer router.ServerID) *clientRecord {
+func newClientRecord() *clientRecord {
 	record := new(clientRecord)
-	record.messageServer = messageServer
+	record.messageServer = ""
 	record.serviceMap = make(serviceMap)
 	return record
 }
