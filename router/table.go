@@ -39,10 +39,15 @@ type RoutingTable interface {
 // service and which message-flow front-end is handling communication with the
 // client.
 type ClientTable interface {
-	// Get client information
 	// Which message server handles communication for client.
 	GetClientMessageServer(ClientID) (ServerID, error)
 
+	// Set the message server handling communication for the client.
+	SetClientMessageServer(ClientID, ServerID) error
+
 	// Which server for service should messages from client be routed to.
 	GetClientServiceServer(ClientID, ServiceID) (ServerID, error)
+
+	// Set server for service responsible for handling messages from client.
+	SetClientServiceServer(ClientID, ServiceID, ServerID) error
 }
