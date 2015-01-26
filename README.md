@@ -53,12 +53,12 @@ How to Contribute
 -----------------
 Any contributions are appreciated.  The basic contribution cycle:
 
-  1) Fork message-flow on github, 
-  2) Make your contribution (documentation improvement, bug fix,
+  1. Fork message-flow on github, 
+  2. Make your contribution (documentation improvement, bug fix,
      optimization, enhancement, etc...),
-  3) Ensure existing unit tests run, the contribution has any new unit tests
+  3. Ensure existing unit tests run, the contribution has any new unit tests
      neccisary, has been verified to work, and has relevant documentation,
-  4) Submit a PR back to the main message-flow repository.
+  4. Submit a PR back to the main message-flow repository.
 
 All contributed code must be licensed under the same license as message-flow.
 
