@@ -82,6 +82,35 @@ func (table *MemoryRoutingTable) SetClientServiceServer(clientID router.ClientID
 	return nil
 }
 
+func (table *MemoryRoutingTable) GetServiceServer(serviceID router.ServiceID) (router.ServerID, error) {
+	record, err := table.getServiceRecord(serviceID)
+	if err != nil {
+		return "", err
+	}
+
+	serverID, err := record.getServer()
+	if err != nil {
+		return "", err
+	}
+
+	return serverID, nil
+}
+
+//  Set a catch-all server for the service.
+func (table *MemoryRoutingTable) SetServiceServer(serviceID router.ServiceID, serverID router.ServerID) error {
+	record, err := table.getOrCreateServiceRecord(serviceID)
+	if err != nil {
+		return err
+	}
+
+	err = record.setServer(serverID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Insert new client record in routing table
 func (table *MemoryRoutingTable) getOrCreateClientRecord(clientID router.ClientID) (*clientRecord, error) {
 	record, ok := table.clientTable[clientID]
@@ -100,6 +129,29 @@ func (table *MemoryRoutingTable) getClientRecord(clientID router.ClientID) (*cli
 
 	if !ok {
 		return nil, router.NewRoutingTableError(router.UnknownClient, "No client routing info found.")
+	}
+
+	return record, nil
+}
+
+// Insert new service record in routing table
+func (table *MemoryRoutingTable) getOrCreateServiceRecord(serviceID router.ServiceID) (*serviceRecord, error) {
+	record, ok := table.serviceTable[serviceID]
+
+	if !ok {
+		record = newServiceRecord("")
+		table.serviceTable[serviceID] = record
+	}
+
+	return record, nil
+}
+
+// Lookup service information in routing table
+func (table *MemoryRoutingTable) getServiceRecord(serviceID router.ServiceID) (*serviceRecord, error) {
+	record, ok := table.serviceTable[serviceID]
+
+	if !ok {
+		return nil, router.NewRoutingTableError(router.UnknownService, "No service routing info found.")
 	}
 
 	return record, nil
@@ -162,3 +214,16 @@ func newServiceRecord(server router.ServerID) *serviceRecord {
 
 type serviceTable map[router.ServiceID]*serviceRecord
 
+func (r *serviceRecord) getServer() (router.ServerID, error) {
+	if r.server == "" {
+		return "", router.NewRoutingTableError(router.ServerNotFoundError, "No catch-all server defined for service.")
+	}
+
+	return r.server, nil
+}
+
+func (r *serviceRecord) setServer(serverID router.ServerID) error {
+	r.server = serverID
+
+	return nil
+}

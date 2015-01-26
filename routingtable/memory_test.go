@@ -102,3 +102,47 @@ func TestMemoryGetClientServiceServer(t *testing.T) {
 		}
 	}
 }
+
+func TestMemoryGetServiceServer(t *testing.T) {
+	table := NewMemoryRoutingTable()
+
+	// Service with a catch-all server.
+	table.SetServiceServer("service.2", "server.1")
+
+	// Service with an empty catch-all server.
+	table.SetServiceServer("service.3", "")
+
+	type TestCase struct {
+		ServiceID router.ServiceID
+		Result    router.ServerID
+		Err       *router.RoutingTableError
+	}
+
+	tests := []TestCase{
+		// service.1 does not exist, there is no mapping.
+		TestCase{"service.1", "", router.NewRoutingTableError(router.UnknownService, "")},
+
+		// service.2 is mapped to server.1.
+		TestCase{"service.2", "server.1", nil},
+
+		// service.3 has a mappings, but no catch-all server defined.
+		TestCase{"service.3", "", router.NewRoutingTableError(router.ServerNotFoundError, "")},
+	}
+
+	for _, test := range tests {
+		result, err := table.GetServiceServer(test.ServiceID)
+		if result != test.Result {
+			t.Errorf("FAIL: Results didn't match.\n\tTest Case: %+v\n\tActual: {result: \"%v\", err: %+v}",
+				test, result, err)
+		} else if err != nil && test.Err == nil {
+			t.Errorf("FAIL: Got an unexpected error.\n\tTest Case: %+v\n\tActual: {result: \"%v\", err: %+v}",
+				test, result, err)
+		} else if err == nil && test.Err != nil {
+			t.Errorf("FAIL: Didn't get an expected error.\n\tTest Case: %+v\n\tActual: {result: \"%v\", err: %+v}",
+				test, result, err)
+		} else if err != nil && test.Err != nil && err.(*router.RoutingTableError).Code != test.Err.Code {
+			t.Errorf("FAIL: Got the wrong error.\n\tTest Case: %+v\n\tActual: {result: \"%v\", err: %+v}",
+				test, result, err)
+		}
+	}
+}
