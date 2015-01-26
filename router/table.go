@@ -12,7 +12,9 @@ const (
 	LookupError
 
 	UnknownClient
+	UnknownService
 
+	ServerNotFoundError
 	MappingNotFoundError
 )
 
