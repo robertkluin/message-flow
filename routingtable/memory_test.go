@@ -11,6 +11,9 @@ func TestMemoryGetClientMessageServer(t *testing.T) {
 	// Client with no mapped services.
 	table.SetClientMessageServer("client.2", "server.1")
 
+	// Client with a mapped service, but no message server.
+	table.SetClientServiceServer("client.3", "service.1", "server.1")
+
 	type TestCase struct {
 		ClientID router.ClientID
 		Result   router.ServerID
@@ -23,6 +26,9 @@ func TestMemoryGetClientMessageServer(t *testing.T) {
 
 		// client.2 messages are mapped to server.1.
 		TestCase{"client.2", "server.1", nil},
+
+		// client.3 has service mappings, but no message server defined.
+		TestCase{"client.3", "", router.NewRoutingTableError(router.MappingNotFoundError, "")},
 	}
 
 	// Load routing data
