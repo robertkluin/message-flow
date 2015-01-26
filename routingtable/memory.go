@@ -112,6 +112,36 @@ func (table *MemoryRoutingTable) SetServiceServer(serviceID router.ServiceID, se
 	return nil
 }
 
+// Get the registrar, if defined, for the service.
+func (table *MemoryRoutingTable) GetServiceRegistrar(serviceID router.ServiceID) (router.ServerID, error) {
+	record, err := table.getServiceRecord(serviceID)
+	if err != nil {
+		return "", err
+	}
+
+	serverID, err := record.getRegistrar()
+	if err != nil {
+		return "", err
+	}
+
+	return serverID, nil
+}
+
+// Set the registrar for the service.
+func (table *MemoryRoutingTable) SetServiceRegistrar(serviceID router.ServiceID, serverID router.ServerID) error {
+	record, err := table.getOrCreateServiceRecord(serviceID)
+	if err != nil {
+		return err
+	}
+
+	err = record.setRegistrar(serverID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Insert new client record in routing table
 func (table *MemoryRoutingTable) getOrCreateClientRecord(clientID router.ClientID) (*clientRecord, error) {
 	record, ok := table.clientTable[clientID]
@@ -140,7 +170,7 @@ func (table *MemoryRoutingTable) getOrCreateServiceRecord(serviceID router.Servi
 	record, ok := table.serviceTable[serviceID]
 
 	if !ok {
-		record = newServiceRecord("")
+		record = newServiceRecord()
 		table.serviceTable[serviceID] = record
 	}
 
@@ -205,11 +235,13 @@ func (r *clientRecord) setServiceServer(serviceID router.ServiceID, serverID rou
 // Routing information tracked per service
 type serviceRecord struct {
 	server     router.ServerID
+	registrar  router.ServerID
 }
 
-func newServiceRecord(server router.ServerID) *serviceRecord {
+func newServiceRecord() *serviceRecord {
 	record := new(serviceRecord)
-	record.server = server
+	record.server = ""
+	record.registrar = ""
 	return record
 }
 
@@ -225,6 +257,20 @@ func (r *serviceRecord) getServer() (router.ServerID, error) {
 
 func (r *serviceRecord) setServer(serverID router.ServerID) error {
 	r.server = serverID
+
+	return nil
+}
+
+func (r *serviceRecord) getRegistrar() (router.ServerID, error) {
+	if r.registrar == "" {
+		return "", router.NewRoutingTableError(router.ServerNotFoundError, "No registrar defined for service.")
+	}
+
+	return r.registrar, nil
+}
+
+func (r *serviceRecord) setRegistrar(registrar router.ServerID) error {
+	r.registrar = registrar
 
 	return nil
 }

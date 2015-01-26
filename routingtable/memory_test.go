@@ -146,3 +146,60 @@ func TestMemoryGetServiceServer(t *testing.T) {
 		}
 	}
 }
+
+func TestMemoryGetServiceRegistrar(t *testing.T) {
+	table := NewMemoryRoutingTable()
+
+	// Service with a catch-all server, but no registrar.
+	table.SetServiceServer("service.2", "server.1")
+
+	// Service with a registrar, and no server.
+	table.SetServiceRegistrar("service.3", "registrar.1")
+
+	// Service with a registrar and server.
+	table.SetServiceServer("service.4", "server.2")
+	table.SetServiceRegistrar("service.4", "registrar.2")
+
+	// Service with an empty registrar.
+	table.SetServiceRegistrar("service.5", "")
+
+	type TestCase struct {
+		ServiceID router.ServiceID
+		Result    router.ServerID
+		Err       *router.RoutingTableError
+	}
+
+	tests := []TestCase{
+		// service.1 does not exist, there is no mapping.
+		TestCase{"service.1", "", router.NewRoutingTableError(router.UnknownService, "")},
+
+		// service.2 has a server, but no registrar.
+		TestCase{"service.2", "", router.NewRoutingTableError(router.ServerNotFoundError, "")},
+
+		// service.3 has a registrar.
+		TestCase{"service.3", "registrar.1", nil},
+
+		// service.4 has a server and a registrar.
+		TestCase{"service.4", "registrar.2", nil},
+
+		// service.5 has an empty registrar.
+		TestCase{"service.5", "", router.NewRoutingTableError(router.ServerNotFoundError, "")},
+	}
+
+	for _, test := range tests {
+		result, err := table.GetServiceRegistrar(test.ServiceID)
+		if result != test.Result {
+			t.Errorf("FAIL: Results didn't match.\n\tTest Case: %+v\n\tActual: {result: \"%v\", err: %+v}",
+				test, result, err)
+		} else if err != nil && test.Err == nil {
+			t.Errorf("FAIL: Got an unexpected error.\n\tTest Case: %+v\n\tActual: {result: \"%v\", err: %+v}",
+				test, result, err)
+		} else if err == nil && test.Err != nil {
+			t.Errorf("FAIL: Didn't get an expected error.\n\tTest Case: %+v\n\tActual: {result: \"%v\", err: %+v}",
+				test, result, err)
+		} else if err != nil && test.Err != nil && err.(*router.RoutingTableError).Code != test.Err.Code {
+			t.Errorf("FAIL: Got the wrong error.\n\tTest Case: %+v\n\tActual: {result: \"%v\", err: %+v}",
+				test, result, err)
+		}
+	}
+}
