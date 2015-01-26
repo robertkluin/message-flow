@@ -32,6 +32,7 @@ func NewRoutingTableError(code RoutingTableErrorCode, message string) *RoutingTa
 // A RoutingTable provides all core interfaces.
 type RoutingTable interface {
 	ClientTable
+	ServiceTable
 }
 
 // Routing tables meeting the ClientTable spec answer basic questions about
@@ -50,4 +51,30 @@ type ClientTable interface {
 
 	// Set server for service responsible for handling messages from client.
 	SetClientServiceServer(ClientID, ServiceID, ServerID) error
+}
+
+// Routing tables meeting the ServiceTable spec answer questions about a
+// service such as is there a single server defined for a service, is there a
+// registrar defined, or what server should messages be directed to.
+type ServiceTable interface {
+	// Get the catch-all server, if defined, for the service.
+	GetServiceServer(ServiceID) (ServerID, error)
+
+	//  Set a catch-all server for the service.
+	SetServiceServer(ServiceID, ServerID) error
+
+	// Get the registrar, if defined, for the service.
+	GetServiceRegistrar(ServiceID) (ServerID, error)
+
+	// Set the registrar for the service.
+	SetServiceRegistrar(ServiceID, ServerID) error
+
+	// Get a server from the pool of the service's registered servers
+	GetServiceRandomServer(ServiceID) (ServerID, error)
+
+	// Add a server to the service's server pool.
+	AddServerToServicePool(ServiceID, ServerID) error
+
+	// Remove a server from the service's pool of servers.
+	RemoveServerFromServicePool(ServiceID, ServerID) error
 }
