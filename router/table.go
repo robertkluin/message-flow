@@ -41,8 +41,8 @@ type RoutingTable interface {
 type ClientTable interface {
 	// Get client information
 	// Which message server handles communication for client.
-	GetClientMessageServer(ClientID) (string, error)
+	GetClientMessageServer(ClientID) (ServerID, error)
 
 	// Which server for service should messages from client be routed to.
-	GetClientServiceServer(ClientID, ServiceID) (string, error)
+	GetClientServiceServer(ClientID, ServiceID) (ServerID, error)
 }
