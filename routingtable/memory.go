@@ -9,12 +9,14 @@ import (
 // message-flow system that does not require persistence.
 
 type MemoryRoutingTable struct {
-	clientTable clientTable
+	clientTable  clientTable
+	serviceTable serviceTable
 }
 
 func NewMemoryRoutingTable() *MemoryRoutingTable {
 	table := new(MemoryRoutingTable)
 	table.clientTable = make(clientTable)
+	table.serviceTable = make(serviceTable)
 	return table
 }
 
@@ -146,3 +148,17 @@ func (r *clientRecord) setServiceServer(serviceID router.ServiceID, serverID rou
 	r.serviceMap[serviceID] = serverID
 	return nil
 }
+
+// Routing information tracked per service
+type serviceRecord struct {
+	server     router.ServerID
+}
+
+func newServiceRecord(server router.ServerID) *serviceRecord {
+	record := new(serviceRecord)
+	record.server = server
+	return record
+}
+
+type serviceTable map[router.ServiceID]*serviceRecord
+
