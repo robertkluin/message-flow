@@ -62,7 +62,7 @@ type ServiceTable interface {
 	// Get the catch-all server, if defined, for the service.
 	GetServiceServer(ServiceID) (ServerID, error)
 
-	//  Set a catch-all server for the service.
+	// Set a catch-all server for the service.
 	SetServiceServer(ServiceID, ServerID) error
 
 	// Get the registrar, if defined, for the service.
