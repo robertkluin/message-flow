@@ -2,9 +2,10 @@ Message Flow
 ============
 
 Message Flow is a simple, pluggable, service discovery and message routing
-system.  It consists of two key components: 1) a basic service
-discovery/registry system and 2) a reverse proxy/router that routes messages
-according to the registry.
+system.  It consists of two key components:
+
+  1. a basic service discovery/registry system, and
+  2. a reverse proxy/router that routes messages according to the registry.
 
 Configuration
 -------------
