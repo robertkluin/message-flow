@@ -18,7 +18,10 @@ func TestMemoryGetClientMessageServer(t *testing.T) {
 	}
 
 	tests := []TestCase{
+		// client.1 does not exist, there are no mappings for it.
 		TestCase{"client.1", "", router.NewRoutingTableError(router.UnknownClient, "")},
+
+		// client.2 messages are mapped to server.1.
 		TestCase{"client.2", "server.1", nil},
 	}
 
@@ -45,9 +48,11 @@ func TestMemoryGetClientMessageServer(t *testing.T) {
 func TestMemoryGetClientServiceServer(t *testing.T) {
 	table := NewMemoryRoutingTable()
 
+	// Client with no mapped services.
 	table.SetClientMessageServer("client.2", "server.1")
 	//table.clientTable["client.2"] = newClientRecord("server.1")
 
+	// Client with service.2 mapped.
 	table.SetClientServiceServer("client.3", "service.2", "server.1")
 	table.SetClientMessageServer("client.3", "server.2")
 
@@ -59,9 +64,16 @@ func TestMemoryGetClientServiceServer(t *testing.T) {
 	}
 
 	tests := []TestCase{
+		// client.1 does not exist, there are no mappings for it.
 		TestCase{"client.1", "service.1", "", router.NewRoutingTableError(router.UnknownClient, "")},
+
+		// client.2 exists, but there are no service mappings for it.
 		TestCase{"client.2", "service.1", "", router.NewRoutingTableError(router.MappingNotFoundError, "")},
+
+		// client.3 exists, but there is no service mappings for service.1.
 		TestCase{"client.3", "service.1", "", router.NewRoutingTableError(router.MappingNotFoundError, "")},
+
+		// client.3 exists and there is a mapping to service.2 to server.1.
 		TestCase{"client.3", "service.2", "server.1", nil},
 	}
 
