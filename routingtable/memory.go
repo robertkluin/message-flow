@@ -82,6 +82,7 @@ func (table *MemoryRoutingTable) SetClientServiceServer(clientID router.ClientID
 	return nil
 }
 
+// Get the catch-all server, if defined, for the service.
 func (table *MemoryRoutingTable) GetServiceServer(serviceID router.ServiceID) (router.ServerID, error) {
 	record, err := table.getServiceRecord(serviceID)
 	if err != nil {
