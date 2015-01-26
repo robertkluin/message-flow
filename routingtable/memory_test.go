@@ -46,9 +46,10 @@ func TestMemoryGetClientServiceServer(t *testing.T) {
 	table := NewMemoryRoutingTable()
 
 	table.SetClientMessageServer("client.2", "server.1")
+	//table.clientTable["client.2"] = newClientRecord("server.1")
 
+	table.SetClientServiceServer("client.3", "service.2", "server.1")
 	table.SetClientMessageServer("client.3", "server.2")
-	clientRecord.setServiceServer("service.2", "server.1")
 
 	type TestCase struct {
 		ClientID  router.ClientID

@@ -65,6 +65,21 @@ func (table *MemoryRoutingTable) GetClientServiceServer(clientID router.ClientID
 	return serverID, nil
 }
 
+// Set server for service responsible for handling messages from client.
+func (table *MemoryRoutingTable) SetClientServiceServer(clientID router.ClientID, serviceID router.ServiceID, serverID router.ServerID) error {
+	record, err := table.getOrCreateClientRecord(clientID)
+	if err != nil {
+		return err
+	}
+
+	err = record.setServiceServer(serviceID, serverID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Insert new client record in routing table
 func (table *MemoryRoutingTable) getOrCreateClientRecord(clientID router.ClientID) (*clientRecord, error) {
 	record, ok := table.clientTable[clientID]
