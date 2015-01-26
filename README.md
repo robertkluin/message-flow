@@ -12,6 +12,7 @@ Configuration
 Message Flow maintains two mappings, a service and a client mapping.  The 
 client mapping is very simplistic.  The mapping service provides the ability to
 answer a few simple questions about a client:
+
     - for a given version of a service, what server should client messages be
       routed to,
     - to deliver a message to a client, which message-router should accept the
@@ -20,6 +21,7 @@ answer a few simple questions about a client:
 The server mapping handles storing service registration data.  It provides
 three mechanisms to determine which specific server a client message should be
 routed to.  These are explained below in priority order:
+
     - server: all messages will be routed to this URI.
     - registrar: if there is not a server specified for the client sending the
         message, message flow will ask the registrar where messages from this
@@ -50,6 +52,7 @@ suitable for a highly-scalable message-flow cluster.
 How to Contribute
 -----------------
   Any contributions are appreciated.  The basic contribution cycle:
+
     1) Fork message-flow on github, 
     2) Make your contribution (documentation improvement, bug fix,
        optimization, enhancement, etc...),
