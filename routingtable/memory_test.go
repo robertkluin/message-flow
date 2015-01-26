@@ -8,7 +8,8 @@ import (
 func TestMemoryGetClientMessageServer(t *testing.T) {
 	table := NewMemoryRoutingTable()
 
-	table.clientTable["client.2"] = newClientRecord("server.1")
+	// Client with no mapped services.
+	table.SetClientMessageServer("client.2", "server.1")
 
 	type TestCase struct {
 		ClientID router.ClientID
@@ -44,11 +45,10 @@ func TestMemoryGetClientMessageServer(t *testing.T) {
 func TestMemoryGetClientServiceServer(t *testing.T) {
 	table := NewMemoryRoutingTable()
 
-	table.clientTable["client.2"] = newClientRecord("server.1")
+	table.SetClientMessageServer("client.2", "server.1")
 
-	clientRecord := newClientRecord("server.2")
+	table.SetClientMessageServer("client.3", "server.2")
 	clientRecord.setServiceServer("service.2", "server.1")
-	table.clientTable["client.3"] = clientRecord
 
 	type TestCase struct {
 		ClientID  router.ClientID

@@ -21,12 +21,31 @@ func NewMemoryRoutingTable() *MemoryRoutingTable {
 // Which message server handles communication for client.
 func (table *MemoryRoutingTable) GetClientMessageServer(clientID router.ClientID) (router.ServerID, error) {
 	record, err := table.getClientRecord(clientID)
-
 	if err != nil {
 		return "", err
 	}
 
-	return record.MessageServer, nil
+	server, err := record.getMessageServer()
+	if err != nil {
+		return "", err
+	}
+
+	return server, nil
+}
+
+// Set the message server that handles communication for the client.
+func (table *MemoryRoutingTable) SetClientMessageServer(clientID router.ClientID, messageServer router.ServerID) error {
+	record, err := table.getOrCreateClientRecord(clientID)
+	if err != nil {
+		return err
+	}
+
+	err = record.setMessageServer(messageServer)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Which server for service should messages from client be routed to.
@@ -46,6 +65,18 @@ func (table *MemoryRoutingTable) GetClientServiceServer(clientID router.ClientID
 	return serverID, nil
 }
 
+// Insert new client record in routing table
+func (table *MemoryRoutingTable) getOrCreateClientRecord(clientID router.ClientID) (*clientRecord, error) {
+	record, ok := table.clientTable[clientID]
+
+	if !ok {
+		record = newClientRecord("")
+		table.clientTable[clientID] = record
+	}
+
+	return record, nil
+}
+
 // Lookup client information in routing table
 func (table *MemoryRoutingTable) getClientRecord(clientID router.ClientID) (*clientRecord, error) {
 	record, ok := table.clientTable[clientID]
@@ -59,7 +90,7 @@ func (table *MemoryRoutingTable) getClientRecord(clientID router.ClientID) (*cli
 
 // Routing information tracked per client
 type clientRecord struct {
-	MessageServer router.ServerID
+	messageServer router.ServerID
 	serviceMap    serviceMap
 }
 
@@ -67,12 +98,24 @@ type serviceMap map[router.ServiceID]router.ServerID
 
 func newClientRecord(messageServer router.ServerID) *clientRecord {
 	record := new(clientRecord)
-	record.MessageServer = messageServer
+	record.messageServer = messageServer
 	record.serviceMap = make(serviceMap)
 	return record
 }
 
 type clientTable map[router.ClientID]*clientRecord
+
+func (r *clientRecord) getMessageServer() (router.ServerID, error) {
+	if r.messageServer == "" {
+		return "", router.NewRoutingTableError(router.MappingNotFoundError, "No message server found for client.")
+	}
+	return r.messageServer, nil
+}
+
+func (r *clientRecord) setMessageServer(serverID router.ServerID) error {
+	r.messageServer = serverID
+	return nil
+}
 
 func (r *clientRecord) getServiceServer(serviceID router.ServiceID) (router.ServerID, error) {
 	serverID, ok := r.serviceMap[serviceID]
