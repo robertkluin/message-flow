@@ -2,6 +2,7 @@ package routingtable
 
 import (
 	"github.com/robertkluin/message-flow/router"
+	"math/rand"
 )
 
 // `MemoryRoutingTable` implements all core client, server, and service
@@ -142,6 +143,51 @@ func (table *MemoryRoutingTable) SetServiceRegistrar(serviceID router.ServiceID,
 	return nil
 }
 
+// Get a server from the pool of the service's registered servers
+func (table *MemoryRoutingTable) GetServiceRandomServer(serviceID router.ServiceID) (router.ServerID, error) {
+	record, err := table.getServiceRecord(serviceID)
+	if err != nil {
+		return "", err
+	}
+
+	serverID, err := record.getServerFromPool()
+	if err != nil {
+		return "", err
+	}
+
+	return serverID, nil
+}
+
+// Add a server to the service's server pool.
+func (table *MemoryRoutingTable) AddServerToServicePool(serviceID router.ServiceID, serverID router.ServerID) error {
+	record, err := table.getOrCreateServiceRecord(serviceID)
+	if err != nil {
+		return err
+	}
+
+	err = record.addServerToPool(serverID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Remove a server from the service's pool of servers.
+func (table *MemoryRoutingTable) RemoveServerFromServicePool(serviceID router.ServiceID, serverID router.ServerID) error {
+	record, err := table.getOrCreateServiceRecord(serviceID)
+	if err != nil {
+		return err
+	}
+
+	err = record.removeServerFromPool(serverID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Insert new client record in routing table
 func (table *MemoryRoutingTable) getOrCreateClientRecord(clientID router.ClientID) (*clientRecord, error) {
 	record, ok := table.clientTable[clientID]
@@ -236,12 +282,42 @@ func (r *clientRecord) setServiceServer(serviceID router.ServiceID, serverID rou
 type serviceRecord struct {
 	server     router.ServerID
 	registrar  router.ServerID
+	serverPool serverList
+}
+
+type serverList []router.ServerID
+
+func (l *serverList) find(serverID router.ServerID) int {
+	for i, id := range *l {
+		if id == serverID {
+			return i
+		}
+	}
+	return -1
+}
+
+func (l *serverList) add(serverID router.ServerID) {
+	if l.find(serverID) >= 0 {
+		return
+	}
+
+	*l = append(*l, serverID)
+}
+
+func (l *serverList) remove(serverID router.ServerID) {
+	pos := l.find(serverID)
+	if pos == -1 {
+		return
+	}
+
+	*l = append((*l)[:pos], (*l)[pos+1:]...)
 }
 
 func newServiceRecord() *serviceRecord {
 	record := new(serviceRecord)
 	record.server = ""
 	record.registrar = ""
+	record.serverPool = make(serverList, 0, 10)
 	return record
 }
 
@@ -271,6 +347,27 @@ func (r *serviceRecord) getRegistrar() (router.ServerID, error) {
 
 func (r *serviceRecord) setRegistrar(registrar router.ServerID) error {
 	r.registrar = registrar
+
+	return nil
+}
+
+func (r *serviceRecord) getServerFromPool() (router.ServerID, error) {
+	pool_size := len(r.serverPool)
+	if len(r.serverPool) == 0 {
+		return "", router.NewRoutingTableError(router.ServerPoolEmptyError, "No servers in pool.")
+	}
+
+	return r.serverPool[rand.Intn(pool_size)], nil
+}
+
+func (r *serviceRecord) addServerToPool(serverID router.ServerID) error {
+	r.serverPool.add(serverID)
+
+	return nil
+}
+
+func (r *serviceRecord) removeServerFromPool(serverID router.ServerID) error {
+	r.serverPool.remove(serverID)
 
 	return nil
 }

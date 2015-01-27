@@ -203,3 +203,97 @@ func TestMemoryGetServiceRegistrar(t *testing.T) {
 		}
 	}
 }
+
+func TestMemoryGetServiceRandomServer(t *testing.T) {
+	table := NewMemoryRoutingTable()
+
+	// Service with a catch-all server, but no server pool.
+	table.SetServiceServer("service.2", "server.1")
+
+	// Service with a registrar, and no server pool.
+	table.SetServiceRegistrar("service.3", "registrar.1")
+
+	// Service with a registrar and server, but no server pool.
+	table.SetServiceServer("service.4", "server.2")
+	table.SetServiceRegistrar("service.4", "registrar.2")
+
+	// Service with a registrar and server and one server in pool.
+	table.SetServiceServer("service.5", "server.2")
+	table.SetServiceRegistrar("service.5", "registrar.2")
+	table.AddServerToServicePool("service.5", "pool.1")
+
+	// Service with only one server in pool.
+	table.AddServerToServicePool("service.6", "pool.1")
+
+	// Service with server removed from pool
+	table.AddServerToServicePool("service.7", "pool.1")
+	table.AddServerToServicePool("service.7", "pool.2")
+	table.AddServerToServicePool("service.7", "pool.3")
+
+	table.RemoveServerFromServicePool("service.7", "pool.1")
+	table.RemoveServerFromServicePool("service.7", "pool.2")
+	table.RemoveServerFromServicePool("service.7", "pool.3")
+
+	// Service with all but one servers removed from pool
+	table.AddServerToServicePool("service.8", "pool.1")
+	table.AddServerToServicePool("service.8", "pool.2")
+	table.RemoveServerFromServicePool("service.8", "pool.1")
+
+	// Tests of serverList add/remove
+	table.RemoveServerFromServicePool("service.9", "pool.1")
+	table.AddServerToServicePool("service.9", "pool.1")
+	table.AddServerToServicePool("service.9", "pool.1")
+	table.RemoveServerFromServicePool("service.9", "pool.1")
+
+	type TestCase struct {
+		ServiceID router.ServiceID
+		Result    router.ServerID
+		Err       *router.RoutingTableError
+	}
+
+	tests := []TestCase{
+		// service.1 does not exist, there is no mapping.
+		TestCase{"service.1", "", router.NewRoutingTableError(router.UnknownService, "")},
+
+		// service.2 has a server, but no server pool.
+		TestCase{"service.2", "", router.NewRoutingTableError(router.ServerPoolEmptyError, "")},
+
+		// service.3 has a registrar, but no server pool.
+		TestCase{"service.3", "", router.NewRoutingTableError(router.ServerPoolEmptyError, "")},
+
+		// service.4 has a server and registrar, but no server pool.
+		TestCase{"service.4", "", router.NewRoutingTableError(router.ServerPoolEmptyError, "")},
+
+		// service.5 has a server, registrar, and single server in the pool.
+		TestCase{"service.5", "pool.1", nil},
+
+		// service.6 has only a single server in the pool.
+		TestCase{"service.6", "pool.1", nil},
+
+		// service.7 has an emptied server pool.
+		TestCase{"service.7", "", router.NewRoutingTableError(router.ServerPoolEmptyError, "")},
+
+		// service.8 has servers added and removed, but one left in the pool.
+		TestCase{"service.8", "pool.2", nil},
+
+		// service.9 should have an emptied server pool.
+		TestCase{"service.9", "", router.NewRoutingTableError(router.ServerPoolEmptyError, "")},
+	}
+
+	for _, test := range tests {
+		result, err := table.GetServiceRandomServer(test.ServiceID)
+		if result != test.Result {
+			t.Errorf("FAIL: Results didn't match.\n\tTest Case: %+v\n\tActual: {result: \"%v\", err: %+v}",
+				test, result, err)
+		} else if err != nil && test.Err == nil {
+			t.Errorf("FAIL: Got an unexpected error.\n\tTest Case: %+v\n\tActual: {result: \"%v\", err: %+v}",
+				test, result, err)
+		} else if err == nil && test.Err != nil {
+			t.Errorf("FAIL: Didn't get an expected error.\n\tTest Case: %+v\n\tActual: {result: \"%v\", err: %+v}",
+				test, result, err)
+		} else if err != nil && test.Err != nil && err.(*router.RoutingTableError).Code != test.Err.Code {
+			t.Errorf("FAIL: Got the wrong error.\n\tTest Case: %+v\n\tActual: {result: \"%v\", err: %+v}",
+				test, result, err)
+		}
+	}
+}

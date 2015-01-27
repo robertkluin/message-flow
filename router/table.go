@@ -14,6 +14,7 @@ const (
 	UnknownClient
 	UnknownService
 
+	ServerPoolEmptyError
 	ServerNotFoundError
 	MappingNotFoundError
 )
